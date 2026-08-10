@@ -7,4 +7,5 @@ export type Task = {
   status: TaskStatus;
   priority: "low" | "medium" | "high";
   createdAt: string;
+  moveTask: (id: string, status: TaskStatus) => void;
 };
