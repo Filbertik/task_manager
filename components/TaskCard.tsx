@@ -1,31 +1,48 @@
 "use client";
 
 import { Task } from "@/types/task.types";
-import { useDraggable } from "@dnd-kit/core";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
-export default function TaskCard({ task }: { task: Task }) {
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+type Props = {
+  task: Task;
+};
+
+export default function TaskCard({ task }: Props) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
     id: task.id,
-    data: {
-      task,
-    },
   });
 
   const style = {
-    transform: transform
-      ? `translate(${transform.x}px, ${transform.y}px)`
-      : undefined,
+    transform: CSS.Transform.toString(transform),
+    transition,
   };
 
   return (
     <div
       ref={setNodeRef}
       style={style}
-      {...listeners}
       {...attributes}
-      className="bg-white p-3 rounded-lg shadow cursor-grab"
+      {...listeners}
+      className={`
+        bg-white
+        p-3
+        rounded-lg
+        shadow
+        cursor-grab
+        select-none
+        ${isDragging ? "opacity-50" : ""}
+      `}
     >
       <p className="font-medium">{task.title}</p>
+
       <span className="text-xs text-gray-500">{task.priority}</span>
     </div>
   );
