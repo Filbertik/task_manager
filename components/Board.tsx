@@ -8,26 +8,19 @@ import {
   closestCorners,
 } from "@dnd-kit/core";
 
-// import {
-//   DndContext,
-//   DragEndEvent,
-//   DragOverEvent,
-//   closestCorners,
-// } from "@dnd-kit/core";
-
 import { useState } from "react";
 
 import { useTaskStore } from "@/store/useTaskStore";
 import { TaskStatus } from "@/types/task.types";
 
 import Column from "./Column";
+import TaskCardContent from "./TaskCardContent";
 
 export default function Board() {
-  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
-
   const { tasks, addTask, moveTask } = useTaskStore();
 
   const [title, setTitle] = useState("");
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
 
   const todo = tasks.filter((task) => task.status === "todo");
 
@@ -35,8 +28,16 @@ export default function Board() {
 
   const done = tasks.filter((task) => task.status === "done");
 
+  const activeTask = tasks.find((task) => task.id === activeTaskId);
+
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveTaskId(event.active.id as string);
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+
+    setActiveTaskId(null);
 
     if (!over) return;
 
@@ -49,17 +50,21 @@ export default function Board() {
     let newStatus: TaskStatus;
     let newIndex: number;
 
-    // Якщо кинули на колонку
+    /*
+     * Перетягування на колонку
+     */
     if (over.id === "todo" || over.id === "in-progress" || over.id === "done") {
       newStatus = over.id as TaskStatus;
 
       const columnTasks = tasks
-        .filter((task) => task.status === newStatus)
+        .filter((task) => task.status === newStatus && task.id !== taskId)
         .sort((a, b) => a.order - b.order);
 
       newIndex = columnTasks.length;
     } else {
-      // Якщо кинули на іншу таску
+      /*
+       * Перетягування на іншу таску
+       */
       const overTask = tasks.find((task) => task.id === over.id);
 
       if (!overTask) return;
@@ -76,17 +81,19 @@ export default function Board() {
         newIndex = columnTasks.length;
       }
     }
-    const handleDragStart = (event: DragStartEvent) => {
-      setActiveTaskId(event.active.id as string);
-    };
 
     moveTask(taskId, newStatus, newIndex);
   };
 
   return (
-    <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
+    <DndContext
+      collisionDetection={closestCorners}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
       <div className="space-y-6">
-        {/* Add task */}
+        {/* Add Task */}
+
         <div className="flex gap-2">
           <input
             value={title}
@@ -109,6 +116,7 @@ export default function Board() {
         </div>
 
         {/* Board */}
+
         <div className="grid grid-cols-3 gap-4">
           <Column title="Todo" status="todo" tasks={todo} />
 
@@ -117,6 +125,12 @@ export default function Board() {
           <Column title="Done" status="done" tasks={done} />
         </div>
       </div>
+
+      {/* Drag Overlay */}
+
+      <DragOverlay>
+        {activeTask ? <TaskCardContent task={activeTask} /> : null}
+      </DragOverlay>
     </DndContext>
   );
 }
