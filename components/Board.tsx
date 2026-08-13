@@ -3,9 +3,17 @@
 import {
   DndContext,
   DragEndEvent,
-  DragOverEvent,
+  DragStartEvent,
+  DragOverlay,
   closestCorners,
 } from "@dnd-kit/core";
+
+// import {
+//   DndContext,
+//   DragEndEvent,
+//   DragOverEvent,
+//   closestCorners,
+// } from "@dnd-kit/core";
 
 import { useState } from "react";
 
@@ -15,6 +23,8 @@ import { TaskStatus } from "@/types/task.types";
 import Column from "./Column";
 
 export default function Board() {
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+
   const { tasks, addTask, moveTask } = useTaskStore();
 
   const [title, setTitle] = useState("");
@@ -66,6 +76,9 @@ export default function Board() {
         newIndex = columnTasks.length;
       }
     }
+    const handleDragStart = (event: DragStartEvent) => {
+      setActiveTaskId(event.active.id as string);
+    };
 
     moveTask(taskId, newStatus, newIndex);
   };
