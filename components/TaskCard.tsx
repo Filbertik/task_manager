@@ -3,6 +3,7 @@
 import { Task } from "@/types/task.types";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import TaskCardContent from "./TaskCardContent";
 
 type Props = {
   task: Task;
@@ -32,18 +33,12 @@ export default function TaskCard({ task }: Props) {
       {...attributes}
       {...listeners}
       className={`
-        bg-white
-        p-3
-        rounded-lg
-        shadow
         cursor-grab
         select-none
-        ${isDragging ? "opacity-50" : ""}
+        ${isDragging ? "opacity-30" : ""}
       `}
     >
-      <p className="font-medium">{task.title}</p>
-
-      <span className="text-xs text-gray-500">{task.priority}</span>
+      <TaskCardContent task={task} />
     </div>
   );
 }
