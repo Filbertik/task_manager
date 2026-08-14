@@ -15,6 +15,21 @@ export const useTaskStore = create<TaskStore>()(
     (set) => ({
       tasks: [],
 
+      // addTask: (title) =>
+      //   set((state) => ({
+      //     tasks: [
+      //       ...state.tasks,
+      //       {
+      //         id: crypto.randomUUID(),
+      //         title,
+      //         status: "todo",
+      //         priority: "medium",
+      //         createdAt: new Date().toISOString(),
+      //         order: state.tasks.filter((task) => task.status === "todo")
+      //           .length,
+      //       },
+      //     ],
+      //   })),
       addTask: (title) =>
         set((state) => ({
           tasks: [
@@ -25,6 +40,7 @@ export const useTaskStore = create<TaskStore>()(
               status: "todo",
               priority: "medium",
               createdAt: new Date().toISOString(),
+              dueDate: undefined,
               order: state.tasks.filter((task) => task.status === "todo")
                 .length,
             },
