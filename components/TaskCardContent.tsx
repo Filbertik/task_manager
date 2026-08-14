@@ -19,8 +19,17 @@ const priorityConfig = {
   },
 };
 
+// export default function TaskCardContent({ task }: Props) {
+//   const priority = priorityConfig[task.priority];
+
+//   return (
 export default function TaskCardContent({ task }: Props) {
   const priority = priorityConfig[task.priority];
+
+  const isOverdue =
+    task.dueDate &&
+    new Date(task.dueDate) < new Date() &&
+    task.status !== "done";
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
