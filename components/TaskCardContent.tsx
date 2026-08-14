@@ -9,20 +9,18 @@ const priorityConfig = {
     label: "Low",
     className: "bg-green-100 text-green-700",
   },
+
   medium: {
     label: "Medium",
     className: "bg-yellow-100 text-yellow-700",
   },
+
   high: {
     label: "High",
     className: "bg-red-100 text-red-700",
   },
 };
 
-// export default function TaskCardContent({ task }: Props) {
-//   const priority = priorityConfig[task.priority];
-
-//   return (
 export default function TaskCardContent({ task }: Props) {
   const priority = priorityConfig[task.priority];
 
@@ -32,7 +30,19 @@ export default function TaskCardContent({ task }: Props) {
     task.status !== "done";
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+    <div
+      className="
+        bg-white
+        rounded-xl
+        border
+        border-gray-200
+        p-4
+        shadow-sm
+        transition
+        hover:-translate-y-0.5
+        hover:shadow-md
+      "
+    >
       {/* Header */}
 
       <div className="flex items-start justify-between gap-3">
@@ -69,12 +79,12 @@ export default function TaskCardContent({ task }: Props) {
         {task.dueDate ? (
           <div
             className={`
-      flex
-      items-center
-      gap-1.5
-      text-xs
-      ${isOverdue ? "text-red-500" : "text-gray-500"}
-    `}
+              flex
+              items-center
+              gap-1.5
+              text-xs
+              ${isOverdue ? "text-red-500" : "text-gray-500"}
+            `}
           >
             <span>📅</span>
 
@@ -88,7 +98,7 @@ export default function TaskCardContent({ task }: Props) {
           <span className="text-xs text-gray-400">No deadline</span>
         )}
 
-        {/* Created */}
+        {/* Created date */}
 
         <span className="text-xs text-gray-400">
           {new Date(task.createdAt).toLocaleDateString("uk-UA")}
