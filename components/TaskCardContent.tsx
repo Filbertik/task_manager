@@ -67,10 +67,22 @@ export default function TaskCardContent({ task }: Props) {
         {/* Due date */}
 
         {task.dueDate ? (
-          <div className="flex items-center gap-1.5 text-xs text-gray-500">
+          <div
+            className={`
+      flex
+      items-center
+      gap-1.5
+      text-xs
+      ${isOverdue ? "text-red-500" : "text-gray-500"}
+    `}
+          >
             <span>📅</span>
 
-            <span>{new Date(task.dueDate).toLocaleDateString("uk-UA")}</span>
+            <span>
+              {isOverdue ? "Overdue · " : ""}
+
+              {new Date(task.dueDate).toLocaleDateString("uk-UA")}
+            </span>
           </div>
         ) : (
           <span className="text-xs text-gray-400">No deadline</span>
