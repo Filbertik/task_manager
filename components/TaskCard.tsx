@@ -35,6 +35,7 @@ export default function TaskCard({ task }: Props) {
       className={`
         cursor-grab
         select-none
+        transition-opacity
         ${isDragging ? "opacity-30" : ""}
       `}
     >
