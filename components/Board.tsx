@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import {
   DndContext,
   DragEndEvent,
@@ -8,82 +10,220 @@ import {
   closestCorners,
 } from "@dnd-kit/core";
 
-import { useState } from "react";
-
 import { useTaskStore } from "@/store/useTaskStore";
+
 import { TaskStatus } from "@/types/task.types";
 
 import Column from "./Column";
+
 import TaskCardContent from "./TaskCardContent";
 
-export default function Board() {
-  const { tasks, addTask, moveTask } = useTaskStore();
+import TaskModal, { TaskFormData } from "./TaskModal";
 
-  const [title, setTitle] = useState("");
+export default function Board() {
+  // ======================================
+  // STORE
+  // ======================================
+
+  const {
+    tasks,
+
+    addTask,
+
+    updateTask,
+
+    deleteTask,
+
+    moveTask,
+  } = useTaskStore();
+
+  // ======================================
+  // DRAG STATE
+  // ======================================
+
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
 
-  const todo = tasks.filter((task) => task.status === "todo");
+  // ======================================
+  // MODAL STATE
+  // ======================================
 
-  const inProgress = tasks.filter((task) => task.status === "in-progress");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const done = tasks.filter((task) => task.status === "done");
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+
+  // ======================================
+  // ACTIVE TASK
+  // ======================================
 
   const activeTask = tasks.find((task) => task.id === activeTaskId);
+
+  // ======================================
+  // EDITING TASK
+  // ======================================
+
+  const editingTask = tasks.find((task) => task.id === editingTaskId);
+
+  // ======================================
+  // COLUMNS
+  // ======================================
+
+  const todo = tasks
+    .filter((task) => task.status === "todo")
+    .sort((a, b) => a.order - b.order);
+
+  const inProgress = tasks
+    .filter((task) => task.status === "in-progress")
+    .sort((a, b) => a.order - b.order);
+
+  const done = tasks
+    .filter((task) => task.status === "done")
+    .sort((a, b) => a.order - b.order);
+
+  // ======================================
+  // CREATE TASK
+  // ======================================
+
+  const handleCreateTask = () => {
+    setEditingTaskId(null);
+
+    setIsModalOpen(true);
+  };
+
+  // ======================================
+  // EDIT TASK
+  // ======================================
+
+  const handleEditTask = (taskId: string) => {
+    setEditingTaskId(taskId);
+
+    setIsModalOpen(true);
+  };
+
+  // ======================================
+  // CLOSE MODAL
+  // ======================================
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+
+    setEditingTaskId(null);
+  };
+
+  // ======================================
+  // MODAL SUBMIT
+  // ======================================
+
+  const handleModalSubmit = (data: TaskFormData) => {
+    if (editingTaskId) {
+      updateTask(editingTaskId, data);
+    } else {
+      addTask(data);
+    }
+
+    setIsModalOpen(false);
+
+    setEditingTaskId(null);
+  };
+
+  // ======================================
+  // DELETE TASK
+  // ======================================
+
+  const handleDeleteTask = () => {
+    if (!editingTaskId) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this task?",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    deleteTask(editingTaskId);
+
+    setIsModalOpen(false);
+
+    setEditingTaskId(null);
+  };
+
+  // ======================================
+  // DRAG START
+  // ======================================
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveTaskId(event.active.id as string);
   };
+
+  // ======================================
+  // DRAG END
+  // ======================================
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
     setActiveTaskId(null);
 
-    if (!over) return;
+    if (!over) {
+      return;
+    }
 
     const taskId = active.id as string;
 
-    const activeTask = tasks.find((task) => task.id === taskId);
+    const draggedTask = tasks.find((task) => task.id === taskId);
 
-    if (!activeTask) return;
-
-    let newStatus: TaskStatus;
-    let newIndex: number;
-
-    /*
-     * Перетягування на колонку
-     */
-    if (over.id === "todo" || over.id === "in-progress" || over.id === "done") {
-      newStatus = over.id as TaskStatus;
-
-      const columnTasks = tasks
-        .filter((task) => task.status === newStatus && task.id !== taskId)
-        .sort((a, b) => a.order - b.order);
-
-      newIndex = columnTasks.length;
-    } else {
-      /*
-       * Перетягування на іншу таску
-       */
-      const overTask = tasks.find((task) => task.id === over.id);
-
-      if (!overTask) return;
-
-      newStatus = overTask.status;
-
-      const columnTasks = tasks
-        .filter((task) => task.status === newStatus && task.id !== taskId)
-        .sort((a, b) => a.order - b.order);
-
-      newIndex = columnTasks.findIndex((task) => task.id === overTask.id);
-
-      if (newIndex === -1) {
-        newIndex = columnTasks.length;
-      }
+    if (!draggedTask) {
+      return;
     }
 
-    moveTask(taskId, newStatus, newIndex);
+    // ==================================
+    // DROP ON COLUMN
+    // ==================================
+
+    const columnIds: TaskStatus[] = ["todo", "in-progress", "done"];
+
+    if (columnIds.includes(over.id as TaskStatus)) {
+      const newStatus = over.id as TaskStatus;
+
+      const columnTasks = tasks
+        .filter((task) => task.status === newStatus && task.id !== taskId)
+        .sort((a, b) => a.order - b.order);
+
+      moveTask(taskId, newStatus, columnTasks.length);
+
+      return;
+    }
+
+    // ==================================
+    // DROP ON TASK
+    // ==================================
+
+    const overTask = tasks.find((task) => task.id === over.id);
+
+    if (!overTask) {
+      return;
+    }
+
+    const newStatus = overTask.status;
+
+    const columnTasks = tasks
+      .filter((task) => task.status === newStatus && task.id !== taskId)
+      .sort((a, b) => a.order - b.order);
+
+    const newIndex = columnTasks.findIndex((task) => task.id === overTask.id);
+
+    moveTask(
+      taskId,
+      newStatus,
+      newIndex === -1 ? columnTasks.length : newIndex,
+    );
   };
+
+  // ======================================
+  // RENDER
+  // ======================================
 
   return (
     <DndContext
@@ -91,46 +231,117 @@ export default function Board() {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="space-y-6">
-        {/* Add Task */}
+      <div
+        className="
+          space-y-6
+        "
+      >
+        {/* ================================= */}
+        {/* TOP BAR */}
+        {/* ================================= */}
 
-        <div className="flex gap-2">
-          <input
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            className="border p-2 rounded w-64"
-            placeholder="New task..."
-          />
+        <div
+          className="
+            flex
+            items-center
+            justify-between
+          "
+        >
+          <div>
+            <h1
+              className="
+                text-2xl
+                font-bold
+                text-gray-900
+              "
+            >
+              Task Manager
+            </h1>
+
+            <p
+              className="
+                mt-1
+                text-sm
+                text-gray-500
+              "
+            >
+              Manage your tasks with Kanban
+            </p>
+          </div>
 
           <button
-            onClick={() => {
-              if (!title.trim()) return;
-
-              addTask(title.trim());
-              setTitle("");
-            }}
-            className="bg-black text-white px-4 rounded"
+            type="button"
+            onClick={handleCreateTask}
+            className="
+              rounded-lg
+              bg-black
+              px-5
+              py-2.5
+              text-sm
+              font-medium
+              text-white
+              transition
+              hover:bg-gray-800
+            "
           >
-            Add
+            + Add task
           </button>
         </div>
 
-        {/* Board */}
+        {/* ================================= */}
+        {/* BOARD */}
+        {/* ================================= */}
 
-        <div className="grid grid-cols-3 gap-4">
-          <Column title="Todo" status="todo" tasks={todo} />
+        <div
+          className="
+            grid
+            grid-cols-1
+            gap-4
+            lg:grid-cols-3
+          "
+        >
+          <Column
+            title="Todo"
+            status="todo"
+            tasks={todo}
+            onEditTask={handleEditTask}
+          />
 
-          <Column title="In Progress" status="in-progress" tasks={inProgress} />
+          <Column
+            title="In Progress"
+            status="in-progress"
+            tasks={inProgress}
+            onEditTask={handleEditTask}
+          />
 
-          <Column title="Done" status="done" tasks={done} />
+          <Column
+            title="Done"
+            status="done"
+            tasks={done}
+            onEditTask={handleEditTask}
+          />
         </div>
       </div>
 
-      {/* Drag Overlay */}
+      {/* ================================= */}
+      {/* DRAG OVERLAY */}
+      {/* ================================= */}
 
       <DragOverlay>
         {activeTask ? <TaskCardContent task={activeTask} /> : null}
       </DragOverlay>
+
+      {/* ================================= */}
+      {/* TASK MODAL */}
+      {/* ================================= */}
+
+      <TaskModal
+        isOpen={isModalOpen}
+        task={editingTask ?? null}
+        onClose={handleCloseModal}
+        onSubmit={handleModalSubmit}
+        onDelete={editingTaskId ? handleDeleteTask : undefined}
+      />
     </DndContext>
   );
 }
