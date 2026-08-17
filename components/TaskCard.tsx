@@ -1,15 +1,20 @@
 "use client";
 
-import { Task } from "@/types/task.types";
 import { useSortable } from "@dnd-kit/sortable";
+
 import { CSS } from "@dnd-kit/utilities";
+
+import { Task } from "@/types/task.types";
+
 import TaskCardContent from "./TaskCardContent";
 
 type Props = {
   task: Task;
+
+  onEdit?: () => void;
 };
 
-export default function TaskCard({ task }: Props) {
+export default function TaskCard({ task, onEdit }: Props) {
   const {
     attributes,
     listeners,
@@ -23,6 +28,7 @@ export default function TaskCard({ task }: Props) {
 
   const style = {
     transform: CSS.Transform.toString(transform),
+
     transition,
   };
 
@@ -33,13 +39,15 @@ export default function TaskCard({ task }: Props) {
       {...attributes}
       {...listeners}
       className={`
-        cursor-grab
         select-none
+        cursor-grab
+        touch-none
         transition-opacity
-        ${isDragging ? "opacity-30" : ""}
+
+        ${isDragging ? "opacity-30" : "opacity-100"}
       `}
     >
-      <TaskCardContent task={task} />
+      <TaskCardContent task={task} onEdit={onEdit} />
     </div>
   );
 }
