@@ -1,11 +1,24 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { Task, TaskStatus } from "@/types/task.types";
+import { Task, TaskPriority, TaskStatus } from "@/types/task.types";
+
+type CreateTaskData = {
+  title: string;
+  description?: string;
+  priority: TaskPriority;
+  dueDate?: string;
+};
+
+type UpdateTaskData = CreateTaskData;
 
 type TaskStore = {
   tasks: Task[];
 
-  addTask: (title: string) => void;
+  addTask: (data: CreateTaskData) => void;
+
+  updateTask: (id: string, data: UpdateTaskData) => void;
+
+  deleteTask: (id: string) => void;
 
   moveTask: (taskId: string, status: TaskStatus, newIndex: number) => void;
 };
@@ -15,37 +28,68 @@ export const useTaskStore = create<TaskStore>()(
     (set) => ({
       tasks: [],
 
-      // addTask: (title) =>
-      //   set((state) => ({
-      //     tasks: [
-      //       ...state.tasks,
-      //       {
-      //         id: crypto.randomUUID(),
-      //         title,
-      //         status: "todo",
-      //         priority: "medium",
-      //         createdAt: new Date().toISOString(),
-      //         order: state.tasks.filter((task) => task.status === "todo")
-      //           .length,
-      //       },
-      //     ],
-      //   })),
-      addTask: (title) =>
+      // =========================
+      // CREATE
+      // =========================
+
+      addTask: (data) =>
+        set((state) => {
+          const todoTasks = state.tasks.filter(
+            (task) => task.status === "todo",
+          );
+
+          const newTask: Task = {
+            id: crypto.randomUUID(),
+            title: data.title,
+            description: data.description,
+            priority: data.priority,
+            dueDate: data.dueDate,
+            status: "todo",
+            createdAt: new Date().toISOString(),
+            order: todoTasks.length,
+          };
+
+          return {
+            tasks: [...state.tasks, newTask],
+          };
+        }),
+
+      // =========================
+      // UPDATE
+      // =========================
+
+      updateTask: (id, data) =>
         set((state) => ({
-          tasks: [
-            ...state.tasks,
-            {
-              id: crypto.randomUUID(),
-              title,
-              status: "todo",
-              priority: "medium",
-              createdAt: new Date().toISOString(),
-              dueDate: undefined,
-              order: state.tasks.filter((task) => task.status === "todo")
-                .length,
-            },
-          ],
+          tasks: state.tasks.map((task) =>
+            task.id === id
+              ? {
+                  ...task,
+                  title: data.title,
+                  description: data.description,
+                  priority: data.priority,
+                  dueDate: data.dueDate,
+                }
+              : task,
+          ),
         })),
+
+      // =========================
+      // DELETE
+      // =========================
+
+      deleteTask: (id) =>
+        set((state) => ({
+          tasks: state.tasks
+            .filter((task) => task.id !== id)
+            .map((task, index) => ({
+              ...task,
+              order: index,
+            })),
+        })),
+
+      // =========================
+      // MOVE / SORT
+      // =========================
 
       moveTask: (taskId, status, newIndex) =>
         set((state) => {
@@ -55,10 +99,8 @@ export const useTaskStore = create<TaskStore>()(
 
           const oldStatus = task.status;
 
-          // Витягуємо таску
           let updatedTasks = state.tasks.filter((task) => task.id !== taskId);
 
-          // Якщо переносимо в іншу колонку
           if (oldStatus !== status) {
             const targetTasks = updatedTasks
               .filter((task) => task.status === status)
@@ -79,7 +121,6 @@ export const useTaskStore = create<TaskStore>()(
 
             updatedTasks = [...updatedTasks, ...targetTasks];
           } else {
-            // Переміщення всередині тієї самої колонки
             const columnTasks = updatedTasks
               .filter((task) => task.status === status)
               .sort((a, b) => a.order - b.order);
