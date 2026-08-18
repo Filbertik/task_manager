@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 
+import ThemeToggle from "./ThemeToggle";
+
 import {
   DndContext,
   DragEndEvent,
@@ -86,9 +88,7 @@ export default function Board() {
   const filteredTasks = useMemo(() => {
     let result = [...tasks];
 
-    // ================================
     // SEARCH
-    // ================================
 
     const searchValue = search.trim().toLowerCase();
 
@@ -102,25 +102,19 @@ export default function Board() {
       });
     }
 
-    // ================================
     // STATUS
-    // ================================
 
     if (statusFilter !== "all") {
       result = result.filter((task) => task.status === statusFilter);
     }
 
-    // ================================
     // PRIORITY
-    // ================================
 
     if (priorityFilter !== "all") {
       result = result.filter((task) => task.priority === priorityFilter);
     }
 
-    // ================================
     // SORT
-    // ================================
 
     const priorityOrder = {
       low: 1,
@@ -130,41 +124,21 @@ export default function Board() {
 
     result.sort((a, b) => {
       switch (sortOption) {
-        // --------------------------
-        // NEWEST
-        // --------------------------
-
         case "newest":
           return (
             new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           );
-
-        // --------------------------
-        // OLDEST
-        // --------------------------
 
         case "oldest":
           return (
             new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
           );
 
-        // --------------------------
-        // HIGH → LOW
-        // --------------------------
-
         case "priority-high":
           return priorityOrder[b.priority] - priorityOrder[a.priority];
 
-        // --------------------------
-        // LOW → HIGH
-        // --------------------------
-
         case "priority-low":
           return priorityOrder[a.priority] - priorityOrder[b.priority];
-
-        // --------------------------
-        // DUE DATE
-        // --------------------------
 
         case "due-date": {
           if (!a.dueDate && !b.dueDate) {
@@ -301,9 +275,7 @@ export default function Board() {
       return;
     }
 
-    // ==================================
     // DROP ON COLUMN
-    // ==================================
 
     const columnIds: TaskStatus[] = ["todo", "in-progress", "done"];
 
@@ -319,9 +291,7 @@ export default function Board() {
       return;
     }
 
-    // ==================================
     // DROP ON TASK
-    // ==================================
 
     const overTask = tasks.find((task) => task.id === over.id);
 
@@ -379,9 +349,7 @@ export default function Board() {
           space-y-6
         "
       >
-        {/* ================================= */}
         {/* HEADER */}
-        {/* ================================= */}
 
         <div
           className="
@@ -399,6 +367,7 @@ export default function Board() {
                 text-2xl
                 font-bold
                 text-gray-900
+                dark:text-gray-100
               "
             >
               Task Manager
@@ -409,36 +378,54 @@ export default function Board() {
                 mt-1
                 text-sm
                 text-gray-500
+                dark:text-gray-400
               "
             >
               Manage your tasks with Kanban
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={handleCreateTask}
+          {/* RIGHT ACTIONS */}
+
+          <div
             className="
+              flex
               w-full
-              rounded-lg
-              bg-black
-              px-5
-              py-2.5
-              text-sm
-              font-medium
-              text-white
-              transition
-              hover:bg-gray-800
+              items-center
+              gap-2
               sm:w-auto
             "
           >
-            + Add task
-          </button>
+            <ThemeToggle />
+
+            <button
+              type="button"
+              onClick={handleCreateTask}
+              className="
+                flex-1
+                rounded-lg
+                bg-black
+                px-5
+                py-2.5
+                text-sm
+                font-medium
+                text-white
+                transition
+                hover:bg-gray-800
+
+                dark:bg-white
+                dark:text-gray-900
+                dark:hover:bg-gray-200
+
+                sm:flex-none
+              "
+            >
+              + Add task
+            </button>
+          </div>
         </div>
 
-        {/* ================================= */}
         {/* FILTERS */}
-        {/* ================================= */}
 
         <div
           className="
@@ -447,6 +434,9 @@ export default function Board() {
             border-gray-200
             bg-white
             p-4
+
+            dark:border-gray-800
+            dark:bg-gray-900
           "
         >
           <TaskFilters
@@ -460,9 +450,7 @@ export default function Board() {
             onSortChange={setSortOption}
           />
 
-          {/* =============================== */}
           {/* FILTER INFO */}
-          {/* =============================== */}
 
           <div
             className="
@@ -473,12 +461,15 @@ export default function Board() {
               border-t
               border-gray-100
               pt-4
+
+              dark:border-gray-800
             "
           >
             <p
               className="
                 text-sm
                 text-gray-500
+                dark:text-gray-400
               "
             >
               Showing{" "}
@@ -486,6 +477,7 @@ export default function Board() {
                 className="
                   font-medium
                   text-gray-900
+                  dark:text-gray-100
                 "
               >
                 {filteredTasks.length}
@@ -495,6 +487,7 @@ export default function Board() {
                 className="
                   font-medium
                   text-gray-900
+                  dark:text-gray-100
                 "
               >
                 {tasks.length}
@@ -512,6 +505,9 @@ export default function Board() {
                   text-gray-500
                   transition
                   hover:text-black
+
+                  dark:text-gray-400
+                  dark:hover:text-white
                 "
               >
                 Clear filters
@@ -520,9 +516,7 @@ export default function Board() {
           </div>
         </div>
 
-        {/* ================================= */}
         {/* NO RESULTS */}
-        {/* ================================= */}
 
         {filteredTasks.length === 0 && tasks.length > 0 && (
           <div
@@ -534,6 +528,9 @@ export default function Board() {
                 bg-white
                 py-16
                 text-center
+
+                dark:border-gray-700
+                dark:bg-gray-900
               "
           >
             <div
@@ -549,6 +546,7 @@ export default function Board() {
                   mt-4
                   font-semibold
                   text-gray-900
+                  dark:text-gray-100
                 "
             >
               No tasks found
@@ -559,6 +557,7 @@ export default function Board() {
                   mt-1
                   text-sm
                   text-gray-500
+                  dark:text-gray-400
                 "
             >
               Try changing your search or filters.
@@ -576,6 +575,12 @@ export default function Board() {
                   text-sm
                   font-medium
                   text-white
+                  transition
+                  hover:bg-gray-800
+
+                  dark:bg-white
+                  dark:text-gray-900
+                  dark:hover:bg-gray-200
                 "
             >
               Clear filters
@@ -583,9 +588,7 @@ export default function Board() {
           </div>
         )}
 
-        {/* ================================= */}
         {/* BOARD */}
-        {/* ================================= */}
 
         <div
           className="
@@ -618,17 +621,13 @@ export default function Board() {
         </div>
       </div>
 
-      {/* ================================= */}
       {/* DRAG OVERLAY */}
-      {/* ================================= */}
 
       <DragOverlay>
         {activeTask ? <TaskCardContent task={activeTask} /> : null}
       </DragOverlay>
 
-      {/* ================================= */}
       {/* MODAL */}
-      {/* ================================= */}
 
       <TaskModal
         isOpen={isModalOpen}
