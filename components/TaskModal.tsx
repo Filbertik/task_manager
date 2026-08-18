@@ -10,10 +10,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Task, TaskPriority } from "@/types/task.types";
 
-// ========================================
-// VALIDATION
-// ========================================
-
 const taskSchema = z.object({
   title: z
     .string()
@@ -31,10 +27,6 @@ const taskSchema = z.object({
   dueDate: z.string().optional(),
 });
 
-// ========================================
-// TYPES
-// ========================================
-
 export type TaskFormData = z.infer<typeof taskSchema>;
 
 type Props = {
@@ -49,10 +41,6 @@ type Props = {
   onDelete?: () => void;
 };
 
-// ========================================
-// PRIORITIES
-// ========================================
-
 const priorities: {
   value: TaskPriority;
   label: string;
@@ -61,21 +49,15 @@ const priorities: {
     value: "low",
     label: "Low",
   },
-
   {
     value: "medium",
     label: "Medium",
   },
-
   {
     value: "high",
     label: "High",
   },
 ];
-
-// ========================================
-// COMPONENT
-// ========================================
 
 export default function TaskModal({
   isOpen,
@@ -85,10 +67,6 @@ export default function TaskModal({
   onDelete,
 }: Props) {
   const isEditMode = Boolean(task);
-
-  // ======================================
-  // FORM
-  // ======================================
 
   const {
     register,
@@ -112,16 +90,10 @@ export default function TaskModal({
 
   const selectedPriority = watch("priority");
 
-  // ======================================
-  // RESET FORM
-  // ======================================
-
   useEffect(() => {
     if (!isOpen) {
       return;
     }
-
-    // EDIT
 
     if (task) {
       reset({
@@ -137,8 +109,6 @@ export default function TaskModal({
       return;
     }
 
-    // CREATE
-
     reset({
       title: "",
 
@@ -150,25 +120,13 @@ export default function TaskModal({
     });
   }, [task, isOpen, reset]);
 
-  // ======================================
-  // CLOSED
-  // ======================================
-
   if (!isOpen) {
     return null;
   }
 
-  // ======================================
-  // SUBMIT
-  // ======================================
-
   const submitHandler = (data: TaskFormData) => {
     onSubmit(data);
   };
-
-  // ======================================
-  // RENDER
-  // ======================================
 
   return (
     <div
@@ -181,6 +139,8 @@ export default function TaskModal({
         justify-center
         bg-black/40
         p-4
+
+        dark:bg-black/70
       "
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) {
@@ -193,13 +153,16 @@ export default function TaskModal({
           w-full
           max-w-[520px]
           rounded-2xl
+          border
+          border-transparent
           bg-white
           shadow-2xl
+
+          dark:border-gray-800
+          dark:bg-gray-900
         "
       >
-        {/* ================================= */}
         {/* HEADER */}
-        {/* ================================= */}
 
         <div
           className="
@@ -210,6 +173,8 @@ export default function TaskModal({
             border-gray-200
             px-6
             py-5
+
+            dark:border-gray-800
           "
         >
           <h2
@@ -217,6 +182,8 @@ export default function TaskModal({
               text-xl
               font-semibold
               text-gray-900
+
+              dark:text-gray-100
             "
           >
             {isEditMode ? "Edit task" : "Create task"}
@@ -237,15 +204,17 @@ export default function TaskModal({
               transition
               hover:bg-gray-100
               hover:text-gray-900
+
+              dark:text-gray-400
+              dark:hover:bg-gray-800
+              dark:hover:text-gray-100
             "
           >
             ×
           </button>
         </div>
 
-        {/* ================================= */}
         {/* FORM */}
-        {/* ================================= */}
 
         <form
           onSubmit={handleSubmit(submitHandler)}
@@ -254,9 +223,7 @@ export default function TaskModal({
             p-6
           "
         >
-          {/* =============================== */}
           {/* TITLE */}
-          {/* =============================== */}
 
           <div>
             <label
@@ -267,6 +234,8 @@ export default function TaskModal({
                 text-sm
                 font-medium
                 text-gray-700
+
+                dark:text-gray-300
               "
             >
               Title
@@ -282,14 +251,24 @@ export default function TaskModal({
                 rounded-lg
                 border
                 border-gray-300
+                bg-white
                 px-3
                 py-2.5
                 text-sm
+                text-gray-900
                 outline-none
                 transition
+                placeholder:text-gray-400
                 focus:border-black
                 focus:ring-1
                 focus:ring-black
+
+                dark:border-gray-700
+                dark:bg-gray-950
+                dark:text-gray-100
+                dark:placeholder:text-gray-500
+                dark:focus:border-white
+                dark:focus:ring-white
               "
             />
 
@@ -306,9 +285,7 @@ export default function TaskModal({
             )}
           </div>
 
-          {/* =============================== */}
           {/* DESCRIPTION */}
-          {/* =============================== */}
 
           <div>
             <label
@@ -319,6 +296,8 @@ export default function TaskModal({
                 text-sm
                 font-medium
                 text-gray-700
+
+                dark:text-gray-300
               "
             >
               Description
@@ -335,14 +314,24 @@ export default function TaskModal({
                 rounded-lg
                 border
                 border-gray-300
+                bg-white
                 px-3
                 py-2.5
                 text-sm
+                text-gray-900
                 outline-none
                 transition
+                placeholder:text-gray-400
                 focus:border-black
                 focus:ring-1
                 focus:ring-black
+
+                dark:border-gray-700
+                dark:bg-gray-950
+                dark:text-gray-100
+                dark:placeholder:text-gray-500
+                dark:focus:border-white
+                dark:focus:ring-white
               "
             />
 
@@ -359,9 +348,7 @@ export default function TaskModal({
             )}
           </div>
 
-          {/* =============================== */}
           {/* PRIORITY */}
-          {/* =============================== */}
 
           <div>
             <label
@@ -371,6 +358,8 @@ export default function TaskModal({
                 text-sm
                 font-medium
                 text-gray-700
+
+                dark:text-gray-300
               "
             >
               Priority
@@ -402,8 +391,8 @@ export default function TaskModal({
 
                         ${
                           isSelected
-                            ? "border-black bg-black text-white"
-                            : "border-gray-300 text-gray-600 hover:border-gray-500"
+                            ? "border-black bg-black text-white dark:border-white dark:bg-white dark:text-gray-900"
+                            : "border-gray-300 text-gray-600 hover:border-gray-500 dark:border-gray-700 dark:text-gray-400 dark:hover:border-gray-500"
                         }
                       `}
                   >
@@ -421,9 +410,7 @@ export default function TaskModal({
             </div>
           </div>
 
-          {/* =============================== */}
           {/* DUE DATE */}
-          {/* =============================== */}
 
           <div>
             <label
@@ -434,6 +421,8 @@ export default function TaskModal({
                 text-sm
                 font-medium
                 text-gray-700
+
+                dark:text-gray-300
               "
             >
               Due date
@@ -448,21 +437,27 @@ export default function TaskModal({
                 rounded-lg
                 border
                 border-gray-300
+                bg-white
                 px-3
                 py-2.5
                 text-sm
+                text-gray-900
                 outline-none
                 transition
                 focus:border-black
                 focus:ring-1
                 focus:ring-black
+
+                dark:border-gray-700
+                dark:bg-gray-950
+                dark:text-gray-100
+                dark:focus:border-white
+                dark:focus:ring-white
               "
             />
           </div>
 
-          {/* ================================= */}
           {/* FOOTER */}
-          {/* ================================= */}
 
           <div
             className="
@@ -472,6 +467,8 @@ export default function TaskModal({
               border-t
               border-gray-200
               pt-5
+
+              dark:border-gray-800
             "
           >
             {/* DELETE */}
@@ -490,6 +487,8 @@ export default function TaskModal({
                       text-red-500
                       transition
                       hover:bg-red-50
+
+                      dark:hover:bg-red-500/10
                     "
                 >
                   Delete
@@ -519,6 +518,10 @@ export default function TaskModal({
                   text-gray-700
                   transition
                   hover:bg-gray-50
+
+                  dark:border-gray-700
+                  dark:text-gray-300
+                  dark:hover:bg-gray-800
                 "
               >
                 Cancel
@@ -536,6 +539,10 @@ export default function TaskModal({
                   text-white
                   transition
                   hover:bg-gray-800
+
+                  dark:bg-white
+                  dark:text-gray-900
+                  dark:hover:bg-gray-200
                 "
               >
                 {isEditMode ? "Save changes" : "Create task"}

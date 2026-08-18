@@ -2,23 +2,29 @@ import { Task } from "@/types/task.types";
 
 type Props = {
   task: Task;
+
   onEdit?: () => void;
 };
 
 const priorityConfig = {
   low: {
     label: "Low",
-    className: "bg-green-100 text-green-700",
+
+    className:
+      "bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-400",
   },
 
   medium: {
     label: "Medium",
-    className: "bg-yellow-100 text-yellow-700",
+
+    className:
+      "bg-yellow-100 text-yellow-700 dark:bg-yellow-500/15 dark:text-yellow-400",
   },
 
   high: {
     label: "High",
-    className: "bg-red-100 text-red-700",
+
+    className: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400",
   },
 };
 
@@ -43,11 +49,13 @@ export default function TaskCardContent({ task, onEdit }: Props) {
         transition
         hover:-translate-y-0.5
         hover:shadow-md
+
+        dark:border-gray-700
+        dark:bg-gray-900
+        dark:shadow-black/20
       "
     >
-      {/* ================================= */}
       {/* HEADER */}
-      {/* ================================= */}
 
       <div
         className="
@@ -64,6 +72,8 @@ export default function TaskCardContent({ task, onEdit }: Props) {
             font-semibold
             leading-5
             text-gray-900
+
+            dark:text-gray-100
           "
         >
           {task.title}
@@ -111,6 +121,10 @@ export default function TaskCardContent({ task, onEdit }: Props) {
                 transition
                 hover:bg-gray-100
                 hover:text-gray-900
+
+                dark:text-gray-500
+                dark:hover:bg-gray-800
+                dark:hover:text-gray-100
               "
               aria-label="Edit task"
             >
@@ -120,9 +134,7 @@ export default function TaskCardContent({ task, onEdit }: Props) {
         </div>
       </div>
 
-      {/* ================================= */}
       {/* DESCRIPTION */}
-      {/* ================================= */}
 
       {task.description && (
         <p
@@ -131,15 +143,15 @@ export default function TaskCardContent({ task, onEdit }: Props) {
             line-clamp-2
             text-sm
             text-gray-500
+
+            dark:text-gray-400
           "
         >
           {task.description}
         </p>
       )}
 
-      {/* ================================= */}
       {/* FOOTER */}
-      {/* ================================= */}
 
       <div
         className="
@@ -159,7 +171,8 @@ export default function TaskCardContent({ task, onEdit }: Props) {
               items-center
               gap-1.5
               text-xs
-              ${isOverdue ? "text-red-500" : "text-gray-500"}
+
+              ${isOverdue ? "text-red-500" : "text-gray-500 dark:text-gray-400"}
             `}
           >
             <span>📅</span>
@@ -175,18 +188,22 @@ export default function TaskCardContent({ task, onEdit }: Props) {
             className="
               text-xs
               text-gray-400
+
+              dark:text-gray-500
             "
           >
             No deadline
           </span>
         )}
 
-        {/* CREATED DATE */}
+        {/* CREATED */}
 
         <span
           className="
             text-xs
             text-gray-400
+
+            dark:text-gray-500
           "
         >
           {new Date(task.createdAt).toLocaleDateString("uk-UA")}
