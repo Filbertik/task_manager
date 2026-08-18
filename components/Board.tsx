@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import {
   DndContext,
@@ -12,13 +12,15 @@ import {
 
 import { useTaskStore } from "@/store/useTaskStore";
 
-import { TaskStatus } from "@/types/task.types";
+import { TaskPriority, TaskStatus } from "@/types/task.types";
 
 import Column from "./Column";
 
 import TaskCardContent from "./TaskCardContent";
 
 import TaskModal, { TaskFormData } from "./TaskModal";
+
+import TaskFilters, { SortOption, StatusFilter } from "./TaskFilters";
 
 export default function Board() {
   // ======================================
@@ -52,6 +54,20 @@ export default function Board() {
   const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
 
   // ======================================
+  // FILTER STATE
+  // ======================================
+
+  const [search, setSearch] = useState("");
+
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+
+  const [priorityFilter, setPriorityFilter] = useState<TaskPriority | "all">(
+    "all",
+  );
+
+  const [sortOption, setSortOption] = useState<SortOption>("newest");
+
+  // ======================================
   // ACTIVE TASK
   // ======================================
 
@@ -64,23 +80,130 @@ export default function Board() {
   const editingTask = tasks.find((task) => task.id === editingTaskId);
 
   // ======================================
+  // FILTER + SORT
+  // ======================================
+
+  const filteredTasks = useMemo(() => {
+    let result = [...tasks];
+
+    // ================================
+    // SEARCH
+    // ================================
+
+    const searchValue = search.trim().toLowerCase();
+
+    if (searchValue) {
+      result = result.filter((task) => {
+        const title = task.title.toLowerCase();
+
+        const description = (task.description ?? "").toLowerCase();
+
+        return title.includes(searchValue) || description.includes(searchValue);
+      });
+    }
+
+    // ================================
+    // STATUS
+    // ================================
+
+    if (statusFilter !== "all") {
+      result = result.filter((task) => task.status === statusFilter);
+    }
+
+    // ================================
+    // PRIORITY
+    // ================================
+
+    if (priorityFilter !== "all") {
+      result = result.filter((task) => task.priority === priorityFilter);
+    }
+
+    // ================================
+    // SORT
+    // ================================
+
+    const priorityOrder = {
+      low: 1,
+      medium: 2,
+      high: 3,
+    };
+
+    result.sort((a, b) => {
+      switch (sortOption) {
+        // --------------------------
+        // NEWEST
+        // --------------------------
+
+        case "newest":
+          return (
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+
+        // --------------------------
+        // OLDEST
+        // --------------------------
+
+        case "oldest":
+          return (
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          );
+
+        // --------------------------
+        // HIGH → LOW
+        // --------------------------
+
+        case "priority-high":
+          return priorityOrder[b.priority] - priorityOrder[a.priority];
+
+        // --------------------------
+        // LOW → HIGH
+        // --------------------------
+
+        case "priority-low":
+          return priorityOrder[a.priority] - priorityOrder[b.priority];
+
+        // --------------------------
+        // DUE DATE
+        // --------------------------
+
+        case "due-date": {
+          if (!a.dueDate && !b.dueDate) {
+            return 0;
+          }
+
+          if (!a.dueDate) {
+            return 1;
+          }
+
+          if (!b.dueDate) {
+            return -1;
+          }
+
+          return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+        }
+
+        default:
+          return 0;
+      }
+    });
+
+    return result;
+  }, [tasks, search, statusFilter, priorityFilter, sortOption]);
+
+  // ======================================
   // COLUMNS
   // ======================================
 
-  const todo = tasks
-    .filter((task) => task.status === "todo")
-    .sort((a, b) => a.order - b.order);
+  const todo = filteredTasks.filter((task) => task.status === "todo");
 
-  const inProgress = tasks
-    .filter((task) => task.status === "in-progress")
-    .sort((a, b) => a.order - b.order);
+  const inProgress = filteredTasks.filter(
+    (task) => task.status === "in-progress",
+  );
 
-  const done = tasks
-    .filter((task) => task.status === "done")
-    .sort((a, b) => a.order - b.order);
+  const done = filteredTasks.filter((task) => task.status === "done");
 
   // ======================================
-  // CREATE TASK
+  // CREATE
   // ======================================
 
   const handleCreateTask = () => {
@@ -90,7 +213,7 @@ export default function Board() {
   };
 
   // ======================================
-  // EDIT TASK
+  // EDIT
   // ======================================
 
   const handleEditTask = (taskId: string) => {
@@ -110,7 +233,7 @@ export default function Board() {
   };
 
   // ======================================
-  // MODAL SUBMIT
+  // SUBMIT MODAL
   // ======================================
 
   const handleModalSubmit = (data: TaskFormData) => {
@@ -126,7 +249,7 @@ export default function Board() {
   };
 
   // ======================================
-  // DELETE TASK
+  // DELETE
   // ======================================
 
   const handleDeleteTask = () => {
@@ -222,6 +345,26 @@ export default function Board() {
   };
 
   // ======================================
+  // RESET FILTERS
+  // ======================================
+
+  const handleResetFilters = () => {
+    setSearch("");
+
+    setStatusFilter("all");
+
+    setPriorityFilter("all");
+
+    setSortOption("newest");
+  };
+
+  const hasFilters =
+    search !== "" ||
+    statusFilter !== "all" ||
+    priorityFilter !== "all" ||
+    sortOption !== "newest";
+
+  // ======================================
   // RENDER
   // ======================================
 
@@ -237,14 +380,17 @@ export default function Board() {
         "
       >
         {/* ================================= */}
-        {/* TOP BAR */}
+        {/* HEADER */}
         {/* ================================= */}
 
         <div
           className="
             flex
-            items-center
-            justify-between
+            flex-col
+            gap-4
+            sm:flex-row
+            sm:items-center
+            sm:justify-between
           "
         >
           <div>
@@ -273,6 +419,7 @@ export default function Board() {
             type="button"
             onClick={handleCreateTask}
             className="
+              w-full
               rounded-lg
               bg-black
               px-5
@@ -282,11 +429,159 @@ export default function Board() {
               text-white
               transition
               hover:bg-gray-800
+              sm:w-auto
             "
           >
             + Add task
           </button>
         </div>
+
+        {/* ================================= */}
+        {/* FILTERS */}
+        {/* ================================= */}
+
+        <div
+          className="
+            rounded-xl
+            border
+            border-gray-200
+            bg-white
+            p-4
+          "
+        >
+          <TaskFilters
+            search={search}
+            status={statusFilter}
+            priority={priorityFilter}
+            sort={sortOption}
+            onSearchChange={setSearch}
+            onStatusChange={setStatusFilter}
+            onPriorityChange={setPriorityFilter}
+            onSortChange={setSortOption}
+          />
+
+          {/* =============================== */}
+          {/* FILTER INFO */}
+          {/* =============================== */}
+
+          <div
+            className="
+              mt-4
+              flex
+              items-center
+              justify-between
+              border-t
+              border-gray-100
+              pt-4
+            "
+          >
+            <p
+              className="
+                text-sm
+                text-gray-500
+              "
+            >
+              Showing{" "}
+              <span
+                className="
+                  font-medium
+                  text-gray-900
+                "
+              >
+                {filteredTasks.length}
+              </span>{" "}
+              of{" "}
+              <span
+                className="
+                  font-medium
+                  text-gray-900
+                "
+              >
+                {tasks.length}
+              </span>{" "}
+              tasks
+            </p>
+
+            {hasFilters && (
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="
+                  text-sm
+                  font-medium
+                  text-gray-500
+                  transition
+                  hover:text-black
+                "
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* ================================= */}
+        {/* NO RESULTS */}
+        {/* ================================= */}
+
+        {filteredTasks.length === 0 && tasks.length > 0 && (
+          <div
+            className="
+                rounded-xl
+                border
+                border-dashed
+                border-gray-300
+                bg-white
+                py-16
+                text-center
+              "
+          >
+            <div
+              className="
+                  text-4xl
+                "
+            >
+              🔍
+            </div>
+
+            <h3
+              className="
+                  mt-4
+                  font-semibold
+                  text-gray-900
+                "
+            >
+              No tasks found
+            </h3>
+
+            <p
+              className="
+                  mt-1
+                  text-sm
+                  text-gray-500
+                "
+            >
+              Try changing your search or filters.
+            </p>
+
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className="
+                  mt-4
+                  rounded-lg
+                  bg-black
+                  px-4
+                  py-2
+                  text-sm
+                  font-medium
+                  text-white
+                "
+            >
+              Clear filters
+            </button>
+          </div>
+        )}
 
         {/* ================================= */}
         {/* BOARD */}
@@ -332,7 +627,7 @@ export default function Board() {
       </DragOverlay>
 
       {/* ================================= */}
-      {/* TASK MODAL */}
+      {/* MODAL */}
       {/* ================================= */}
 
       <TaskModal
